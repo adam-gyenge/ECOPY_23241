@@ -37,7 +37,7 @@ class UniformDistribution:
         else:
             raise ValueError("Valószínűségi értéknek 0 és 1 között kell lennie.")
 
-    def gen_random(self):
+    def gen_rand(self):
         return random.uniform(self.a, self.b)
 
     def mean(self):
@@ -100,10 +100,9 @@ class NormalDistribution:
         else:
             raise ValueError("Valószínűségi értéknek 0 és 1 között kell lennie.")
 
-    def gen_random(self):
-        # Generál egy normális eloszlású véletlen számot a paraméterek alapján
-        z = self.rand.gauss(self.loc, self.scale)
-        return z
+    def gen_rand(self):
+        # Normális eloszlású véletlen szám generálása
+        return self.loc + self.scale * math.sqrt(-2 * math.log(self.rand.random())) * math.cos(2 * math.pi * self.rand.random())
 
     def mean(self):
         return self.loc
@@ -147,7 +146,7 @@ class CauchyDistribution:
         else:
             raise ValueError("Valószínűségi érték nem 0 és 1 között van")
 
-    def gen_random(self):
+    def gen_rand(self):
         # Cauchy eloszlású véletlen szám generálása
         return self.loc + self.scale * math.tan(math.pi * (self.rand.random() - 0.5))
 
