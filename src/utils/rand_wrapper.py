@@ -3,10 +3,16 @@ import random
 #random.seed(42)
 
 def random_from_list(input_list):
-    return input_list[random.randint(0, len(input_list)-1)]
+    #return input_list[random.randint(0, len(input_list)-1)]
+    return random.choice(input_list)
 
 
 def random_sublist_from_list(input_list, number_of_elements):
+    #return random.sample(input_list, number_of_elements)
+    if number_of_elements > len(input_list):
+        raise ValueError("number is longer then length of list")
+    elif number_of_elements <= 0:
+        raise ValueError("Num of elements has to be positive number")
     return random.sample(input_list, number_of_elements)
 
 
