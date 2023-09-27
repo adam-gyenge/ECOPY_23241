@@ -51,7 +51,7 @@ class UniformDistribution:
     def variance(self):
         if self.a == self.b:
             raise Exception("Moment undefined")
-        return ((self.b - self.a) ** 2) / 12
+        return ((self.b - self.a) ^ 2) / 12
 
     def skewness(self):
         if self.a == self.b:
