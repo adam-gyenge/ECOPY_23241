@@ -1,6 +1,6 @@
 import random
 
-#random.seed(42)
+random.seed(42)
 
 def random_from_list(input_list):
     #return input_list[random.randint(0, len(input_list)-1)]
@@ -13,7 +13,7 @@ def random_sublist_from_list(input_list, number_of_elements):
         raise ValueError("number is longer then length of list")
     elif number_of_elements <= 0:
         raise ValueError("Num of elements has to be positive number")
-    return random.sample(input_list, number_of_elements)
+    return random.choices(input_list, k=number_of_elements)
 
 
 def random_from_string(input_string):
@@ -50,4 +50,4 @@ def random_reorder(input_list):
 
 
 def uniform_one_to_five():
-    return random.uniform(1, 5)
+    return random.uniform(1, 6)
