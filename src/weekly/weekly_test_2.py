@@ -15,9 +15,9 @@ class LaplaceDistribution:
 
     def cdf(self, x):
         if x<=self.loc:
-            return (1/2) * (math.exp(x - self.loc))
+            return (1/2) * ((math.exp(x - self.loc)) / self.scale)
         if x>=self.loc:
-            return 1 - 0.5 * math.exp(-(x - self.loc) / self.scale)
+            return 1 - ((1/2) * math.exp(-1 * ((x - self.loc) / self.scale)))
         else:
             raise ValueError("x not number")
 
@@ -82,7 +82,7 @@ class ParetoDistribution:
         if p < 0 or p > 1:
             raise ValueError("p has to be between 0 and 1")
         else:
-            return self.scale*((1 - p)**(-1/self.shape))
+            return self.scale * ( (1 - p) ** (-1/self.shape) )
 
     def gen_rand(self):
         u = self.rand.uniform(0, 1)
@@ -104,13 +104,15 @@ class ParetoDistribution:
 
     def skewness(self):
         if self.shape <= 3:
-            raise Exception("there is no moment")
-        return ((2 * (1 + self.shape)) / (self.shape - 3)) * math.sqrt((self.shape - 2)/self.shape)
+            raise Exception("Moment undefined")
+        return ((2 * (1 + self.shape)) / (self.shape - 3)) * math.sqrt((1 - (2/self.shape)))
 
     def ex_kurtosis(self):
         if self.shape <= 4:
-            raise Exception("there is no moment")
-        return  (6 *((self.shape ** 3) + (self.shape ** 2) - (6*self.shape) - 2)) / (self.shape * (self.shape - 3) * (self.shape - 4))
+            raise Exception("Moment undefined")
+        #return  (6 * ((self.shape**3) + (self.shape**2) - (6 * self.shape) - 2)) / (self.shape * (self.shape - 3) * (self.shape - 4))
+        return (3 * (self.shape - 2) * ((3 * (self.shape**2)) + self.shape + 2)) / (self.shape * (self.shape - 3) * (self.shape - 4))
+
 
     def mvsk(self):
         mean = self.mean()
