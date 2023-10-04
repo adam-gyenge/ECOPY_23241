@@ -2,6 +2,7 @@ import random
 import math
 import typing
 import pyerf
+from scipy.special import gamma, gammainc, gammaincinv
 
 
 class SecondClass:
@@ -167,3 +168,103 @@ class CauchyDistribution:
 
     def mvsk(self):
         raise Exception("Moments undefined")  # A Cauchy eloszlásnak nincsenek véges momentumai
+
+
+class LogisticDistribution:
+    def __init__(self, rand, loc, scale):
+        self.rand = rand
+        self.loc = loc
+        self.scale = scale
+
+    def pdf(self, x):
+        exponent = -(x - self.loc) / self.scale
+        denominator = self.scale * (1 + math.exp(exponent)) ** 2
+        return math.exp(exponent) / denominator
+
+    def cdf(self, x):
+        return 1 / (1 + math.e**(-(x - self.loc) / self.scale))
+
+    def ppf(self, p):
+        if 0 < p < 1:
+            return self.loc - self.scale * math.log(1 / p - 1)
+        else:
+            raise ValueError("p must be in the range (0, 1)")
+
+    def gen_rand(self):
+        u = self.rand.random()
+        return self.loc - self.scale * math.log(1 / u - 1)
+
+    def mean(self):
+        if self.scale == 0:
+            raise Exception("Moment undefined")
+        return self.loc
+
+    def variance(self):
+        if self.scale == 0:
+            raise Exception("Moment undefined")
+        return (math.pi ** 2) * (self.scale ** 2) / 3
+
+    def skewness(self):
+        if self.scale == 0:
+            raise Exception("Moment undefined")
+        return 0
+
+    def ex_kurtosis(self):
+        if self.scale == 0:
+            raise Exception("Moment undefined")
+        return 1.2
+
+    def mvsk(self):
+        if self.scale == 0:
+            raise Exception("Moment undefined")
+        return [self.mean(), self.variance(), self.skewness(), self.ex_kurtosis()]
+
+
+class ChiSquaredDistribution:
+    def __init__(self, rand, dof):
+        self.rand = rand
+        self.dof = dof
+
+    def pdf(self, x):
+        if x < 0:
+            return 0
+        else:
+            return (1 / (2 * gamma(self.dof/2))) * ((x / 2)**(self.dof/2-1)) * math.exp(-x/2)
+
+    def cdf(self, x):
+        if x < 0:
+            return 0
+        return gammainc(self.dof/2, x/2) / gamma(self.dof/2)
+        #return 2 * (gammainc(self.dof/2, x*gamma(self.dof/2))**(-1))
+
+    def ppf(self, p):
+        return 2 * (gammainc(self.dof/2, p * (gamma(self.dof/2)))**(-1))
+
+    def gen_rand(self):
+        u = self.rand.random()
+        return self.ppf(u)
+
+    def mean(self):
+        if self.dof < 0:
+            raise Exception("Moment undefined")
+        return self.dof
+
+    def variance(self):
+        if self.dof < 0:
+            raise Exception("Moment undefined")
+        return 2 * self.dof
+
+    def skewness(self):
+        if self.dof < 0:
+            raise Exception("Moment undefined")
+        return math.sqrt(8 / self.dof)
+
+    def ex_kurtosis(self):
+        if self.dof < 0:
+            raise Exception("Moment undefined")
+        return 12 / self.dof
+
+    def mvsk(self):
+        if self.dof < 1:
+            raise Exception("Moment undefined")
+        return [self.mean(), self.variance(), self.skewness(), self.ex_kurtosis()]
