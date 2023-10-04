@@ -239,7 +239,7 @@ class ChiSquaredDistribution:
         #return 2 * (gammainc(self.dof/2, x*gamma(self.dof/2))**(-1))
 
     def ppf(self, p):
-        return gammainc(self.dof / 2, p)
+        return gammaincinv(self.dof / 2, p)
         #* ( gamma(self.dof/2) )))**(-1)
 
     def gen_rand(self):
