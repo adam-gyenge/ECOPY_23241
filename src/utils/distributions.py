@@ -234,11 +234,12 @@ class ChiSquaredDistribution:
     def cdf(self, x):
         if x < 0:
             return 0
-        return gammainc(self.dof/2, x/2) / gamma(self.dof/2)
+        return (gammainc(self.dof/2, x/2))
+        #/ (gamma(self.dof/2)
         #return 2 * (gammainc(self.dof/2, x*gamma(self.dof/2))**(-1))
 
     def ppf(self, p):
-        return 2 * (gammainc(self.dof/2, p * (gamma(self.dof/2)))**(-1))
+        return 2 * ( (gammainc(self.dof / 2, p * ( gamma(self.dof/2) )))**(-1) )
 
     def gen_rand(self):
         u = self.rand.random()
