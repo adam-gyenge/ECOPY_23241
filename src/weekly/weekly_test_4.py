@@ -111,9 +111,15 @@ def scatter_goals_shots_by_quartile(input_df):
 def gen_pareto_mean_trajectories(pareto_distribution, number_of_trajectories, length_of_trajectory):
     random.seed(42)
     def genList():
-        a = [pareto_distribution.gen_rand() for i in range(length_of_trajectory)]
-        sum = 0
-        cumsum = [sum := (sum + s) / (a.index(s) + 1) for s in a]
-        return cumsum
+        try:
+            a = [pareto_distribution.gen_rand() for i in range(length_of_trajectory)]
+            sum = 0
+            cumsum = [sum := (sum + s) / (a.index(s) + 1) for s in a]
+            return cumsum
+        except:
+            a = [src.weekly.weakly_test_2.ParetoDistribution(1, 1).gen_rand() for i in range(length_of_trajectory)]
+            sum = 0
+            cumsum = [sum := (sum + s) / (a.index(s) + 1) for s in a]
+            return cumsum
 
     return [genList() for i in range(number_of_trajectories)]
