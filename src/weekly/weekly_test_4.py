@@ -117,7 +117,7 @@ def gen_pareto_mean_trajectories(pareto_distribution, number_of_trajectories, le
             cumsum = [sum := (sum + s) / (a.index(s) + 1) for s in a]
             return cumsum
         except:
-            a = [src.weekly.weakly_test_2.ParetoDistribution(1, 1).gen_rand() for i in range(length_of_trajectory)]
+            a = [src.weekly.weekly_test_2.ParetoDistribution(random, 1, 1).gen_rand() for i in range(length_of_trajectory)]
             sum = 0
             cumsum = [sum := (sum + s) / (a.index(s) + 1) for s in a]
             return cumsum
