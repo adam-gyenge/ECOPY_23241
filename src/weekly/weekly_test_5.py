@@ -61,6 +61,7 @@ def sliced_view(input_df, columns_to_keep, column_to_filter, rows_to_keep):
 
 def generate_quartile(input_df):
     #df = change_price_to_float(input_df)
+    df = input_df.copy()
     bins = [0, 9.99, 19.99, 29.99, float('inf')]
     labels = ['low-cost', 'medium-cost', 'high-cost', 'premium']
     input_df['Quartile'] = pd.cut(input_df['item_price'], bins=bins, labels=labels, right=False).astype(object)
