@@ -65,7 +65,7 @@ class LinearRegressionNP:
         self.X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
 
         # Perform OLS regression
-        self.beta = np.linalg.lstsq(self.X, self.left_hand_side, rcond=None)[0]
+        self.beta = np.linalg.inv(self.X.T @ self.X) @ self.X.T @ self.left_hand_side
 
     def get_params(self):
         if self.beta is not None:
