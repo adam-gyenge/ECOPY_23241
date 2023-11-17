@@ -127,26 +127,26 @@ class LinearRegressionNP:
 
 class LinearRegressionGLS:
     def __init__(self, left_hand_side, right_hand_side):
-        self.left_hand_side = left_hand_side
-        self.right_hand_side = right_hand_side
+        self.left_hand_side = left_hand_side.values
+        self.right_hand_side = right_hand_side.values
         self.beta = None
 
     def fit(self):
-        self.X = self.right_hand_side.values
-        self.y = self.left_hand_side.values.flatten()
+        #self.X = self.right_hand_side.values
+        self.X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
+        self.y = self.left_hand_side
         beta_ols = np.linalg.inv(self.X.T @ self.X) @ self.X.T @ self.y
-
         residuals = self.y - self.X @ beta_ols
-        squared_residuals = residuals ** 2
 
-        X_new = self.X #np.column_stack((np.log(squared_residuals), self.X)))
-        y_new = np.log(self.y ** 2)
+        X_new = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side)) #np.column_stack((np.log(squared_residuals), self.X))
+        y_new = np.log(residuals**2) #np.log(self.y ** 2)
         beta_gls = np.linalg.inv(X_new.T @ X_new) @ X_new.T @ y_new
 
         # V inverz mátrix előállítása
-        V_inv = np.diag(1 / np.sqrt(X_new @ beta_gls))
-
-        return beta_gls, V_inv
+        self.V_inv = np.diag(1 / np.sqrt(np.exp(X_new @ beta_gls)))
+        beta_gls = np.linalg.inv(X_new.T @ self.V_inv @ X_new) @ X_new.T @ self.V_inv @ self.left_hand_side
+        self.coefficients = beta_gls
+        return beta_gls
 
     def get_params(self):
         beta_values = self.fit()
@@ -154,48 +154,45 @@ class LinearRegressionGLS:
         return params_series
 
     def get_pvalues(self):
-        residuals = self.y - self.X @ beta
-        sigma_squared = np.sum(residuals ** 2) / (len(self.y) - self.X.shape[1])
-        var_cov_matrix = sigma_squared * np.linalg.inv(self.X.T @ self.X)
+        n_obs = len(self.y)
+        n_params = len(self.coefficients)
+
+        residuals = self.left_hand_side - np.column_stack((np.ones(n_obs), self.right_hand_side)) @ self.coefficients
+        sigma_squared = (residuals @ residuals) / (n_obs - n_params)
+        var_cov_matrix = sigma_squared * np.linalg.inv(self.X.T @ self.V_inv @ self.X)
 
         se = np.sqrt(np.diagonal(var_cov_matrix))
-        t_stat = beta / se
+        t_stat = self.coefficients / se
 
-        p_values = (1 - t.cdf(np.abs(t_stat), len(self.y) - self.X.shape[1])) * 2
+        #p_values = (1 - t.cdf(np.abs(t_stat), n_obs - n_params)) * 2
+        p_values = [min(value, 1 - value) * 2 for value in t.cdf(np.abs(t_stat), df=n_obs - n_params)]
+
         p_values = pd.Series(p_values, name='P-values for the corresponding coefficients')
-
         return p_values
 
     def get_wald_test_result(self, R):
-        self.left_hand_side.insert(1, 'Constant', 1)
-
-        #beta = np.linalg.inv(X.T @ X) @ X.T @ y
-        residuals = y - X @ self.beta
-        sigma_squared = np.sum(residuals ** 2) / (len(y) - X.shape[1])
-        var_cov_matrix = sigma_squared * np.linalg.inv(X.T @ X)
+        one = (np.array(R) @ self.coefficients).T
+        mid = np.array(R) @ np.linalg.inv(self.X.T @ self.V_inv @ self.X) @ np.array(R).T
+        end = np.array(R) @ self.coefficients
 
         R = np.array(R)
-        beta_R = self.beta[np.all(R == 0, axis=1)]
-        q = R.shape[0]
-        k = R.shape[1]
+        n = len(self.left_hand_side)
+        m, k = np.array(R).shape
 
-        wald_value = (R @ beta_R) @ np.linalg.inv(R @ var_cov_matrix @ R.T) @ (R @ beta_R) / q
+        # sigma squared
+        residuals = self.left_hand_side - self.X @ self.coefficients
+        sigma_squared = (residuals @ residuals) / (n - k)
 
-        p_value = 1 - f.cdf(wald_value, q, len(y) - k)
+        wald_value = (one @ np.linalg.inv(mid) @ end) / (m * sigma_squared)
+        p_value = 1 - f.cdf(wald_value, dfn=m, dfd=n - k)
 
         return f"Wald: {wald_value:.3f}, p-value: {p_value:.3f}"
 
     def get_model_goodness_values(self):
-        k = self.right_hand_side.shape[1] + 1
-
-        n = len(self.left_hand_side)
-
-        y_hat = np.exp(self.right_hand_side.values @ self.beta_gls[1:]) * np.sqrt(np.exp(self.beta_gls[0]))
-        y_mean = np.mean(self.left_hand_side.values)
-        centered_r_squared = 1 - np.sum((self.left_hand_side.values - y_hat) ** 2) / np.sum(
-            (self.left_hand_side.values - y_mean) ** 2)
-
-        adjusted_r_squared = 1 - (1 - centered_r_squared) * ((n - 1) / (n - k))
-
+        total_sum_of_squares = self.y.T @ self.V_inv @ self.y
+        residual_sum_of_squares = self.y.T @ self.V_inv @ self.X @ np.linalg.inv(
+            self.X.T @ self.V_inv @ self.X) @ self.X.T @ self.V_inv @ self.y
+        centered_r_squared = 1 - (residual_sum_of_squares / total_sum_of_squares)
+        adjusted_r_squared = 1 - (residual_sum_of_squares / (len(self.y) - self.X.shape[1])) * (
+                len(self.y) - 1) / total_sum_of_squares
         return f"Centered R-squared: {centered_r_squared:.3f}, Adjusted R-squared: {adjusted_r_squared:.3f}"
-
